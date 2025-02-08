@@ -11,7 +11,7 @@ CHECKBOX_TMPL = ('<input type="checkbox" class="action-select" value="{}" '
                  'name="_selected_action" />')
 
 
-def _line(context, node, request):
+def _line(context, node, request) -> str:
     pk_field = node._meta.model._meta.pk.attname
     if TO_FIELD_VAR in request.GET and request.GET[TO_FIELD_VAR] == pk_field:
         raw_id_fields = format_html("""
@@ -27,7 +27,7 @@ def _line(context, node, request):
         node.pk, mark_safe(raw_id_fields), str(node))
 
 
-def _subtree(context, node, request):
+def _subtree(context, node, request) -> str:
     tree = ''
     for subnode in node.get_children():
         tree += format_html(

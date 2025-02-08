@@ -8,19 +8,22 @@ https://tabo.pe/projects/numconv/
 
 __version__ = '2.1.1'
 
+from treebeard.types import PositiveInt, RadixInt, Char, NonNegativeInt
+from typing import Final, Dict
+
 # from april fool's rfc 1924
-BASE85 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' \
+BASE85: Final = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' \
          '!#$%&()*+-;<=>?@^_`{|}~'
 
 # rfc4648 alphabets
-BASE16 = BASE85[:16]
-BASE32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
-BASE32HEX = BASE85[:32]
-BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-BASE64URL = BASE64[:62] + '-_'
+BASE16: Final = BASE85[:16]
+BASE32: Final = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
+BASE32HEX: Final = BASE85[:32]
+BASE64: Final = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+BASE64URL: Final = BASE64[:62] + '-_'
 
 # http://en.wikipedia.org/wiki/Base_62 useful for url shorteners
-BASE62 = BASE85[:62]
+BASE62: Final = BASE85[:62]
 
 
 class NumConv(object):
@@ -39,21 +42,21 @@ class NumConv(object):
         :raise ValueError: when *alphabet* has duplicated characters
     """
 
-    def __init__(self, radix=10, alphabet=BASE85):
+    def __init__(self, radix: RadixInt=10, alphabet: str=BASE85):
         """basic validation and cached_map storage"""
         if int(radix) != radix:
             raise TypeError('radix must be an integer')
         if not 2 <= radix <= len(alphabet):
             raise ValueError('radix must be >= 2 and <= %d' % (
                 len(alphabet), ))
-        self.radix = radix
-        self.alphabet = alphabet
-        self.cached_map = dict(zip(self.alphabet, range(len(self.alphabet))))
+        self.radix: RadixInt = radix
+        self.alphabet: str = alphabet
+        self.cached_map: Dict[Char,int] = dict(zip(self.alphabet, range(len(self.alphabet))))
         if len(self.cached_map) != len(self.alphabet):
             raise ValueError("duplicate characters found in '%s'" % (
                 self.alphabet, ))
 
-    def int2str(self, num):
+    def int2str(self, num: PositiveInt) -> str:
         """Converts an integer into a string.
 
         :param num: A numeric value to be converted to another base as a
@@ -80,7 +83,7 @@ class NumConv(object):
             num //= radix
         return ret
 
-    def str2int(self, num):
+    def str2int(self, num: str) -> NonNegativeInt:
         """Converts a string into an integer.
 
         If possible, the built-in python conversion will be used for speed
@@ -105,11 +108,11 @@ class NumConv(object):
         return ret
 
 
-def int2str(num, radix=10, alphabet=BASE85):
+def int2str(num: PositiveInt, radix: RadixInt=10, alphabet: str=BASE85) -> str:
     """helper function for quick base conversions from integers to strings"""
     return NumConv(radix, alphabet).int2str(num)
 
 
-def str2int(num, radix=10, alphabet=BASE85):
+def str2int(num: str, radix: RadixInt=10, alphabet:str=BASE85) -> NonNegativeInt:
     """helper function for quick base conversions from strings to integers"""
     return NumConv(radix, alphabet).str2int(num)

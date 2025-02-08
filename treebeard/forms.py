@@ -1,7 +1,6 @@
 """Forms for treebeard."""
 
 from django import forms
-from django.db.models.query import QuerySet
 from django.forms.models import ErrorList
 from django.forms.models import modelform_factory as django_modelform_factory
 from django.utils.html import escape

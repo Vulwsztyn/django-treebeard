@@ -2,19 +2,24 @@
 
 import operator
 from functools import reduce
+from typing import Dict, Type
 
-from django.db.models import Q
+from django.db.models import Q, Model
 from django.db import models, router, connections
 
 from treebeard.exceptions import InvalidPosition, MissingNodeOrderBy
+from abc import ABC, abstractmethod
+
+from treebeard.types import PositiveInt
 
 
-class Node(models.Model):
+class Node(models.Model, ABC):
     """Node class"""
 
     _db_connection = None
 
     @classmethod
+    @abstractmethod
     def add_root(cls, **kwargs):  # pragma: no cover
         """
         Adds a root node to the tree. The new root node will be the new
@@ -36,16 +41,13 @@ class Node(models.Model):
         raise NotImplementedError
 
     @classmethod
-    def get_foreign_keys(cls):
+    def get_foreign_keys(cls) -> Dict[str, Type[Model]]:
         """Get foreign keys and models they refer to, so we can pre-process
         the data for load_bulk
         """
         foreign_keys = {}
         for field in cls._meta.fields:
-            if (
-                field.get_internal_type() == 'ForeignKey' and
-                field.name != 'parent'
-            ):
+            if field.get_internal_type() == "ForeignKey" and field.name != "parent":
                 foreign_keys[field.name] = field.remote_field.model
         return foreign_keys
 
@@ -57,8 +59,7 @@ class Node(models.Model):
         """
         for key in foreign_keys.keys():
             if key in node_data:
-                node_data[key] = foreign_keys[key].objects.get(
-                    pk=node_data[key])
+                node_data[key] = foreign_keys[key].objects.get(pk=node_data[key])
 
     @classmethod
     def load_bulk(cls, bulk_data, parent=None, keep_ids=False):
@@ -105,7 +106,7 @@ class Node(models.Model):
         while stack:
             parent, node_struct = stack.pop()
             # shallow copy of the data structure so it doesn't persist...
-            node_data = node_struct['data'].copy()
+            node_data = node_struct["data"].copy()
             cls._process_foreign_keys(foreign_keys, node_data)
             if keep_ids:
                 node_data[pk_field] = node_struct[pk_field]
@@ -124,6 +125,7 @@ class Node(models.Model):
         return added
 
     @classmethod
+    @abstractmethod
     def dump_bulk(cls, parent=None, keep_ids=True):  # pragma: no cover
         """
         Dumps a tree branch to a python data structure.
@@ -144,6 +146,7 @@ class Node(models.Model):
         raise NotImplementedError
 
     @classmethod
+    @abstractmethod
     def get_root_nodes(cls):  # pragma: no cover
         """:returns: A queryset containing the root nodes in the tree."""
         raise NotImplementedError
@@ -173,11 +176,13 @@ class Node(models.Model):
             return None
 
     @classmethod
+    @abstractmethod
     def find_problems(cls):  # pragma: no cover
         """Checks for problems in the tree structure."""
         raise NotImplementedError
 
     @classmethod
+    @abstractmethod
     def fix_tree(cls):  # pragma: no cover
         """
         Solves problems that can appear when transactions are not used and
@@ -186,6 +191,7 @@ class Node(models.Model):
         raise NotImplementedError
 
     @classmethod
+    @abstractmethod
     def get_tree(cls, parent=None):
         """
         :returns:
@@ -220,10 +226,12 @@ class Node(models.Model):
             node.descendants_count = node.get_descendant_count()
         return nodes
 
+    @abstractmethod
     def get_depth(self):  # pragma: no cover
         """:returns: the depth (level) of the node"""
         raise NotImplementedError
 
+    @abstractmethod
     def get_siblings(self):  # pragma: no cover
         """
         :returns:
@@ -233,14 +241,16 @@ class Node(models.Model):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def get_children(self):  # pragma: no cover
         """:returns: A queryset of all the node's children"""
         raise NotImplementedError
 
-    def get_children_count(self):
+    def get_children_count(self) -> PositiveInt:
         """:returns: The number of the node's children"""
         return self.get_children().count()
 
+    @abstractmethod
     def get_descendants(self):
         """
         :returns:
@@ -355,6 +365,7 @@ class Node(models.Model):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def add_child(self, **kwargs):  # pragma: no cover
         """
         Adds a child to the node. The new node will be the new rightmost
@@ -377,6 +388,7 @@ class Node(models.Model):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def add_sibling(self, pos=None, **kwargs):  # pragma: no cover
         """
         Adds a new node as a sibling to the current node object.
@@ -416,6 +428,7 @@ class Node(models.Model):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def get_root(self):  # pragma: no cover
         """:returns: the root node for the current node object."""
         raise NotImplementedError
@@ -424,10 +437,11 @@ class Node(models.Model):
         """:returns: True if the node is a root node (else, returns False)"""
         return self.get_root().pk == self.pk
 
-    def is_leaf(self):
+    def is_leaf(self) -> bool:
         """:returns: True if the node is a leaf node (else, returns False)"""
         return not self.get_children().exists()
 
+    @abstractmethod
     def get_ancestors(self):  # pragma: no cover
         """
         :returns:
@@ -438,6 +452,7 @@ class Node(models.Model):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def get_parent(self, update=False):  # pragma: no cover
         """
         :returns: the parent node of the current node object.
@@ -447,6 +462,7 @@ class Node(models.Model):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def move(self, target, pos=None):  # pragma: no cover
         """
         Moves the current node and all it's descendants to a new position

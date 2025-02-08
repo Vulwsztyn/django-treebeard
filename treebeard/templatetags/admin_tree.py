@@ -64,7 +64,7 @@ def get_result_and_row_class(cl, field_name, result):
     return result_repr, row_class
 
 
-def get_spacer(first, result):
+def get_spacer(first: bool, result):
     if first:
         spacer = '<span class="spacer">&nbsp;</span>' * (
             result.get_depth() - 1)
@@ -84,7 +84,7 @@ def get_collapse(result):
     return collapse
 
 
-def get_drag_handler(first):
+def get_drag_handler(first: bool) -> str:
     drag_handler = ''
     if first:
         drag_handler = ('<td class="drag-handler">'

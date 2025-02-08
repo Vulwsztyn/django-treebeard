@@ -78,7 +78,7 @@ class AL_Node(Node):
         """:returns: A queryset containing the root nodes in the tree."""
         return get_result_class(cls).objects.filter(parent__isnull=True)
 
-    def get_depth(self, update=False):
+    def get_depth(self, update: bool = False):
         """
         :returns: the depth (level) of the node
             Caches the result in the object itself to help in loops.
@@ -153,12 +153,12 @@ class AL_Node(Node):
             return ancestors[0]
         return self
 
-    def is_descendant_of(self, node):
+    def is_descendant_of(self, node: Node) -> bool:
         """
         :returns: ``True`` if the node if a descendant of another node given
             as an argument, else, returns ``False``
         """
-        return self.pk in [obj.pk for obj in node.get_descendants()]
+        return self.pk in (obj.pk for obj in node.get_descendants())
 
     @classmethod
     def dump_bulk(cls, parent=None, keep_ids=True):

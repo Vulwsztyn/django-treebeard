@@ -7,3 +7,6 @@ django_extensions
 
 # Testing
 tox>=4.0
+
+# typing
+annotated_types

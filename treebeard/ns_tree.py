@@ -2,6 +2,7 @@
 
 import operator
 from functools import reduce
+from typing import Dict, Tuple, Optional, Iterable
 
 from django.core import serializers
 from django.db import connection, models
@@ -10,6 +11,7 @@ from django.utils.translation import gettext_noop as _
 
 from treebeard.exceptions import InvalidMoveToDescendant, NodeAlreadySaved
 from treebeard.models import Node
+from treebeard.types import PositiveInt
 
 
 def get_result_class(cls):
@@ -36,15 +38,21 @@ def get_result_class(cls):
         return base_class
 
 
-def merge_deleted_counters(c1, c2):
+NumDeletedPerModel = Dict[str, PositiveInt]
+CountAndNumDeletedPerModel = Tuple[PositiveInt, NumDeletedPerModel]
+RemovedRanges = Tuple[PositiveInt, PositiveInt, PositiveInt]
+
+
+def merge_deleted_counters(
+    c1: CountAndNumDeletedPerModel, c2: CountAndNumDeletedPerModel
+) -> CountAndNumDeletedPerModel:
     """
     Merge return values from Django's Queryset.delete() method.
     """
     object_counts = {
-        key: c1[1].get(key, 0) + c2[1].get(key, 0) 
-        for key in set(c1[1]) | set(c2[1])
+        key: c1[1].get(key, 0) + c2[1].get(key, 0) for key in set(c1[1]) | set(c2[1])
     }
-    return (c1[0] + c2[0], object_counts)
+    return c1[0] + c2[0], object_counts
 
 
 class NS_NodeQuerySet(models.query.QuerySet):
@@ -54,7 +62,13 @@ class NS_NodeQuerySet(models.query.QuerySet):
     Needed only for the customized delete method.
     """
 
-    def delete(self, *args, removed_ranges=None, deleted_counter=None, **kwargs):
+    def delete(
+        self,
+        *args,
+        removed_ranges: Optional[Iterable[RemovedRanges]] = None,
+        deleted_counter: Optional[CountAndNumDeletedPerModel] = None,
+        **kwargs,
+    ) -> CountAndNumDeletedPerModel:
         """
         Custom delete method, will remove all descendant nodes to ensure a
         consistent tree (no orphans)
@@ -176,7 +190,7 @@ class NS_Node(Node):
         return newobj
 
     @classmethod
-    def _move_right(cls, tree_id, rgt, lftmove=False, incdec=2):
+    def _move_right(cls, tree_id, rgt, lftmove: bool = False, incdec: PositiveInt = 2):
         if lftmove:
             lftop = '>='
         else:
