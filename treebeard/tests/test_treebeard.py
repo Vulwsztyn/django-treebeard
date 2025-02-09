@@ -32,6 +32,9 @@ from treebeard.forms import movenodeform_factory
 from treebeard.tests import models
 from treebeard.tests.admin import register_all as admin_register_all
 
+from typing import Tuple, List, Any, Union, Dict, Optional
+from treebeard.types import NonNegativeInt
+from treebeard.models import Node
 
 admin_register_all()
 
@@ -150,7 +153,7 @@ def get_changelist_args(*args):
 
 
 class TestTreeBase:
-    def got(self, model):
+    def got(self, model: Node) -> Tuple[str, NonNegativeInt, NonNegativeInt]:
         if model in [models.NS_TestNode, models.NS_TestNode_Proxy]:
             # this slows down nested sets tests quite a bit, but it has the
             # advantage that we'll check the node edges are correct

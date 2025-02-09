@@ -14,10 +14,10 @@ from treebeard.models import Node
 from treebeard.exceptions import InvalidMoveToDescendant, PathOverflow,\
     NodeAlreadySaved
 
+from typing import Optional, Type
 
 # The following functions generate vendor-specific SQL functions
-def sql_concat(*args, **kwargs):
-    vendor = kwargs.pop('vendor', None)
+def sql_concat(*args: str, vendor: Optional[str]=None, **kwargs) -> str:
     if vendor == 'mysql':
         return 'CONCAT({})'.format(', '.join(args))
     if vendor == 'microsoft':
@@ -25,14 +25,13 @@ def sql_concat(*args, **kwargs):
     return '||'.join(args)
 
 
-def sql_length(field, vendor=None):
+def sql_length(field: str, vendor: Optional[str]=None) -> str:
     if vendor == 'microsoft':
         return 'LEN({})'.format(field)
     return 'LENGTH({})'.format(field)
 
 
-def sql_substr(field, pos, length=None, **kwargs):
-    vendor = kwargs.pop('vendor', None)
+def sql_substr(field: str, pos: str, length: Optional[str]=None, vendor: Optional[str]=None, **kwargs) -> str:
     function = 'SUBSTR({field}, {pos})'
     if length:
         function = 'SUBSTR({field}, {pos}, {length})'
@@ -43,7 +42,7 @@ def sql_substr(field, pos, length=None, **kwargs):
     return function.format(field=field, pos=pos, length=length)
 
 
-def get_result_class(cls):
+def get_result_class(cls: Type[models.Model]) -> Type[models.Model]:
     """
     For the given model class, determine what class we should use for the
     nodes returned by its tree methods (such as get_children).
@@ -725,7 +724,7 @@ class MP_Node(Node):
         return evil_chars, bad_steplen, orphans, wrong_depth, wrong_numchild
 
     @classmethod
-    def fix_tree(cls, destructive=False, fix_paths=False):
+    def fix_tree(cls, destructive: bool=False, fix_paths: bool=False) -> None:
         """
         Solves some problems that can appear when transactions are not used and
         a piece of code breaks, leaving the tree in an inconsistent state.
@@ -875,7 +874,7 @@ class MP_Node(Node):
                             children_to_fix.append((item['path'], depth + 1))
 
     @classmethod
-    def _rewrite_node_path(cls, old_path, new_path):
+    def _rewrite_node_path(cls, old_path: str, new_path: str) -> None:
         cls.objects.filter(path__startswith=old_path).update(
             path=Concat(
                 Value(new_path),

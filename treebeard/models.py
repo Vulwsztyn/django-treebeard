@@ -8,8 +8,9 @@ from django.db import models, router, connections
 
 from treebeard.exceptions import InvalidPosition, MissingNodeOrderBy
 
+from abc import ABC, abstractmethod
 
-class Node(models.Model):
+class Node(models.Model, ABC):
     """Node class"""
 
     _db_connection = None
@@ -186,6 +187,7 @@ class Node(models.Model):
         raise NotImplementedError
 
     @classmethod
+    @abstractmethod
     def get_tree(cls, parent=None):
         """
         :returns:
@@ -377,6 +379,7 @@ class Node(models.Model):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def add_sibling(self, pos=None, **kwargs):  # pragma: no cover
         """
         Adds a new node as a sibling to the current node object.
