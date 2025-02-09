@@ -12,6 +12,7 @@ from abc import ABC, abstractmethod
 
 from treebeard.types import PositiveInt
 
+from abc import ABC, abstractmethod
 
 class Node(models.Model, ABC):
     """Node class"""
